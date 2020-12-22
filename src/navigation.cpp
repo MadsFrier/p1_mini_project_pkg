@@ -113,11 +113,11 @@ Turtle::Turtle() // The no arg-constructor is set to ask the user for input to s
     std::cin >> ang_vel_multi;
 }
 
-Turtle::getDistance(float x1, float x2, float y1, float y2){ // Calculates the distance between Turtle and goal
+float Turtle::getDistance(float x1, float x2, float y1, float y2){ // Calculates the distance between Turtle and goal
   return sqrt(pow((x2-x1),2)+pow((y2-y1),2));                // Distance formula
 }
 
-Turtle::movetoGoal(turtlesim::Pose turtlesim_Pose, Turtle::getDisTol()){  // Calls instance "turtlesim_pose" and the getter "Turtle::getDisTol()"
+void Turtle::movetoGoal(turtlesim::Pose turtlesim_Pose, Turtle::getDisTol()){  // Calls instance "turtlesim_pose" and the getter "Turtle::getDisTol()"
   geometry_msgs::Twist vel_msg; // Creating an instance of the geometry_msgs called "vel_msg"
 
   do                            // Changes the velocities of the Turtle
