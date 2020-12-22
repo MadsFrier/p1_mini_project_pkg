@@ -96,7 +96,7 @@ class Turtle
   float distance_tolerance, lin_speed_multi, ang_vel_multi;
   public:
   Turtle();                                                  // Constructor
-  void movetoGoal();                                         // Function
+  void movetoGoal(turtlesim::Pose turtlesim_Pose, float Turtle::getDisTol());  // Function
   float getDistance(float x1, float x2, float y1, float y2); // Function
   float getDisTol() { return distance_tolerance; }           // Getter/accessor 
   float getLSM() { return lin_speed_multi; }                 // Getter/accessor
@@ -113,7 +113,7 @@ Turtle::Turtle() // The no arg-constructor is set to ask the user for input to s
     std::cin >> ang_vel_multi;
 }
 
-float Turtle::getDistance(){ // Calculates the distance between Turtle and goal
+float Turtle::getDistance(float x1, float x2, float y1, float y2){ // Calculates the distance between Turtle and goal
   return sqrt(pow((x2-x1),2)+pow((y2-y1),2));                // Distance formula
 }
 
@@ -150,15 +150,15 @@ int main(int argc, char **argv)        // Initation of main
   velocity_publisher = n.advertise<geometry_msgs::Twist>("/turtle1/cmd_vel", 100);
   pose_subscriber = n.subscribe("/turtle1/pose", 10);
 
+  Nav nav;                             // Creating instance of Nav class
   turtlesim::Pose turtlesim_Pose;      // Creating an instance of turtlesim::Pose called turtlesim_Pose
   {
     // Starting location
     turtlesim_Pose.x = 1;
     turtlesim_Pose.y = 1;
     turtlesim_Pose.theta = 0;
-    Turtle::movetoGoal(turtlesim_Pose, 0,01)
+    movetoGoal(turtlesim_Pose, 0,01);
   }
-  Nav nav;                             // Creating instance of Nav class
   Turtle controller;                   // Creating instance of Turtle class
 
   // Har måske brug for en teleport til et andet sted end i midten
