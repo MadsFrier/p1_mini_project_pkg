@@ -111,7 +111,7 @@ int main(int argc, char **argv) // initation of main
 
   Nav nav; // creating instance of Nav class
 
-  while (nav.state() != 0) //while loop running while nav.state differs from 0
+  while (nav.get_state() != 0) //while loop running while nav.state differs from 0
   {
     nav.calc_new_goal(); // Calls the calc_new_goal function
 
