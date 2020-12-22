@@ -111,8 +111,6 @@ Turtle::Turtle() // The no arg-constructor is set to ask the user for input to s
     std::cin >> lin_speed_multi;
     std::cout << "Insert angular velocity multiplyer";
     std::cin >> ang_vel_multi;
-    velocity_publisher = n.advertise<geometry_msgs::Twist>("/turtle1/cmd_vel", 100);
-    pose_subscriber = n.subscribe("/turtle1/pose", 10);
 }
 
 Turtle::getDistance(float x1, float x2, float y1, float y2){ // Calculates the distance between Turtle and goal
@@ -146,6 +144,11 @@ int main(int argc, char **argv)        // Initation of main
 {
   ros::init(argc, argv, "navigation"); // initiation ROS
   ros::Nodehandle n;
+  ros::Publisher velocity_publisher;
+  ros::Subscriber pose_subscriber;
+
+  velocity_publisher = n.advertise<geometry_msgs::Twist>("/turtle1/cmd_vel", 100);
+  pose_subscriber = n.subscribe("/turtle1/pose", 10);
 
   turtlesim::Pose turtlesim_Pose;      // Creating an instance of turtlesim::Pose called turtlesim_Pose
   Nav nav;                             // Creating instance of Nav class
