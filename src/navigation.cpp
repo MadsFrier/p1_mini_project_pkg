@@ -33,67 +33,66 @@ Nav::Nav()
 */
 Nav::Nav()   // The no arg-constructor is set to ask the user for input to set the dimensions of the area, and distance between the lines.
 {
-    std::cout << "Insert length in meters: ";
-    std::cin >> area_length;
-    std::cout << "Insert width in meters: ";
-    std::cin >> area_width;
-    std::cout << "Insert line width in the search area in metres";
-    std::cin >> line_width;
-    /*
+  std::cout << "Insert length in meters: ";
+  std::cin >> area_length;
+  std::cout << "Insert width in meters: ";
+  std::cin >> area_width;
+  std::cout << "Insert line width in the search area in metres";
+  std::cin >> line_width;
+  /*
     Man kunne skrive 
     goal_x = 0;
     goal_y = 0;
     Men det ligger lidt implicit i constructoren, selv hvis man ikke skriver det. 
     */
-  }
+}
 
 void Nav::calc_new_goal()   // void function that updates the current location, the new goal and checks if goal is within area size.
 {
   float current_x = goal_x; // current_x stores the x-location of the robot. This is updated each time the calc_new_goal is called.
   float current_y = goal_y; // current_y stores the y-location of the robot. This is updated each time the calc_new_goal is called.
-  switch (state)            // switch function that updates the goal location depending on the state.
-  {
-  case 1:
-  {
-    goal_x = area_length;
-    goal_y = current_y;
-    state++;
+  switch (state){           // switch function that updates the goal location depending on the state.
+    case 1:
+    {
+      goal_x = area_length;
+      goal_y = current_y;
+      state++;
+    }
+    break;
+    case 2:
+    {
+      goal_x = current_x;
+      goal_y = current_y + line_width;
+      state++;
+    }
+    break;
+    case 3:
+    {
+      goal_x = current_x - area_length;
+      goal_y = current_y;
+      state++;
+    }
+    break;
+    case 4:
+    {
+      goal_x = current_x;
+      goal_y = current_y + line_width;
+      state = 1;
+    }
+    default:
+    {
+      std::cout << "You messed up boy, check you states bitch";
+    }
+    break;
   }
-  break;
-  case 2:
-  {
-    goal_x = current_x;
-    goal_y = current_y + line_width;
-    state++;
-  }
-  break;
-  case 3:
-  {
-    goal_x = current_x - area_length;
-    goal_y = current_y;
-    state++;
-  }
-  break;
-  case 4:
-  {
-    goal_x = current_x;
-    goal_y = current_y + line_width;
-    state = 1;
-  }
-  default:
-  {
-    std::cout << "You messed up boy, check you states bitch";
-  }
-  break;
-  }
-  if (goal_y > area_width)  // If-statement that checks to see if the switch put the goal outside the area
+  if (goal_y > area_width){ // If-statement that checks to see if the switch put the goal outside the area
     goal_x = 0;
     goal_y = 0;
     state = 0;
   }
 }
 
-class Turlte 
+class Turtle 
 {
   private:
   double distance_tolerance;
@@ -105,7 +104,7 @@ class Turlte
   double getDisTol() { return distance_tolerance; } // Getter/accessor 
   float getLSM() { return lin_speed_multi; }        // Getter/accessor
   float getAVM() { return ang_vel_multi; }          // Getter/accessor
-}
+};
 
 Turtle::Turtle()
 {
