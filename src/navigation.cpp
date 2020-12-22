@@ -95,12 +95,12 @@ class Turtle
   private:
   float distance_tolerance, lin_speed_multi, ang_vel_multi;
   public:
-  Turtle();                                         // Constructor
-  void movetoGoal();                                // Function
-  float getDistance();                              // Function
-  float getDisTol() { return distance_tolerance; }  // Getter/accessor 
-  float getLSM() { return lin_speed_multi; }        // Getter/accessor
-  float getAVM() { return ang_vel_multi; }          // Getter/accessor
+  Turtle();                                                  // Constructor
+  void movetoGoal();                                         // Function
+  float getDistance(float x1, float x2, float y1, float y2); // Function
+  float getDisTol() { return distance_tolerance; }           // Getter/accessor 
+  float getLSM() { return lin_speed_multi; }                 // Getter/accessor
+  float getAVM() { return ang_vel_multi; }                   // Getter/accessor
 };
 
 Turtle::Turtle() // The no arg-constructor is set to ask the user for input to set the multiplyers and the distance tolerance
@@ -113,7 +113,7 @@ Turtle::Turtle() // The no arg-constructor is set to ask the user for input to s
     std::cin >> ang_vel_multi;
 }
 
-float Turtle::getDistance(float x1, float x2, float y1, float y2){ // Calculates the distance between Turtle and goal
+float Turtle::getDistance(){ // Calculates the distance between Turtle and goal
   return sqrt(pow((x2-x1),2)+pow((y2-y1),2));                // Distance formula
 }
 
@@ -152,6 +152,7 @@ int main(int argc, char **argv)        // Initation of main
 
   turtlesim::Pose turtlesim_Pose;      // Creating an instance of turtlesim::Pose called turtlesim_Pose
   {
+    // Starting location
     turtlesim_Pose.x = 1;
     turtlesim_Pose.y = 1;
     turtlesim_Pose.theta = 0;
