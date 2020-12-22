@@ -95,12 +95,12 @@ class Turtle
   private:
   float distance_tolerance, lin_speed_multi, ang_vel_multi;
   public:
-  Turtle();                                                  // Constructor
+  Turtle();                                                                    // Constructor
+  float getDisTol() { return distance_tolerance; }                             // Getter/accessor            
   void movetoGoal(turtlesim::Pose turtlesim_Pose, float Turtle::getDisTol());  // Function
-  float getDistance(float x1, float x2, float y1, float y2); // Function
-  float getDisTol() { return distance_tolerance; }           // Getter/accessor 
-  float getLSM() { return lin_speed_multi; }                 // Getter/accessor
-  float getAVM() { return ang_vel_multi; }                   // Getter/accessor
+  float getDistance(float x1, float x2, float y1, float y2);                   // Function
+  float getLSM() { return lin_speed_multi; }                                   // Getter/accessor
+  float getAVM() { return ang_vel_multi; }                                     // Getter/accessor
 };
 
 Turtle::Turtle() // The no arg-constructor is set to ask the user for input to set the multiplyers and the distance tolerance
@@ -151,6 +151,7 @@ int main(int argc, char **argv)        // Initation of main
   pose_subscriber = n.subscribe("/turtle1/pose", 10);
 
   Nav nav;                             // Creating instance of Nav class
+  Turtle controller;                   // Creating instance of Turtle class
   turtlesim::Pose turtlesim_Pose;      // Creating an instance of turtlesim::Pose called turtlesim_Pose
   {
     // Starting location
@@ -159,7 +160,7 @@ int main(int argc, char **argv)        // Initation of main
     turtlesim_Pose.theta = 0;
     movetoGoal(turtlesim_Pose, 0,01);
   }
-  Turtle controller;                   // Creating instance of Turtle class
+  
 
   // Har måske brug for en teleport til et andet sted end i midten
 
