@@ -142,7 +142,7 @@ void Turtle::movetoGoal(turtlesim::Pose turtlesim_Pose, float x, float y){      
     velocity_publisher.publish(vel_msg);
 }
 
-int main(int argc, char **argv)        // Initation of main
+int main(int argc, char **argv)        // Initation of main  Tjek det her @christianhjorth 
 {
   ros::init(argc, argv, "navigation"); // initiation ROS
   ros::NodeHandle n;
