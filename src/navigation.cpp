@@ -6,18 +6,16 @@
 #include <turtlesim/Pose.h>
 #include <math.h>
 
-//typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient; // type definition - everything from left saved as MoveBaseClient
-
 class Nav
 {
 private:
   float area_length, area_width, goal_x, goal_y, line_width; // The private variables are initialzed
-  int state = 1;                    // The state of the turtle is initiated with a value of 1
+  int state = 1;                      // The state of the turtle is initiated with a value of 1
 public:
-  Nav();                            // Constructor
-  void calc_new_goal();             // Function 
-  float get_x() { return goal_x; }  // Getter/accessor 
-  float get_y() { return goal_y; }  // Getter/accessor
+  Nav();                              // Constructor
+  void calc_new_goal();               // Function 
+  float get_x() { return goal_x; }    // Getter/accessor 
+  float get_y() { return goal_y; }    // Getter/accessor
   float get_state() { return state; } // Getter/accessor
 };
 /*
@@ -95,18 +93,17 @@ void Nav::calc_new_goal()   // void function that updates the current location, 
 class Turtle 
 {
   private:
-  double distance_tolerance;
-  float lin_speed_multi, ang_vel_multi;
+  float distance_tolerance, lin_speed_multi, ang_vel_multi;
   public:
   Turtle();                                         // Constructor
   void movetoGoal();                                // Function
-  double getDistance();                             // Function
-  double getDisTol() { return distance_tolerance; } // Getter/accessor 
+  float getDistance();                              // Function
+  float getDisTol() { return distance_tolerance; }  // Getter/accessor 
   float getLSM() { return lin_speed_multi; }        // Getter/accessor
   float getAVM() { return ang_vel_multi; }          // Getter/accessor
 };
 
-Turtle::Turtle()
+Turtle::Turtle() // The no arg-constructor is set to ask the user for input to set the multiplyers and the distance tolerance
 {
     std::cout << "Insert distance tolerance in meters: ";
     std::cin >> distance_tolerance;
@@ -114,10 +111,12 @@ Turtle::Turtle()
     std::cin >> lin_speed_multi;
     std::cout << "Insert angular velocity multiplyer";
     std::cin >> ang_vel_multi;
+    velocity_publisher = n.advertise<geometry_msgs::Twist>("/turtle1/cmd_vel", 100);
+    pose_subscriber = n.subscribe("/turtle1/pose", 10);
 }
 
-Turtle::getDistance(double x1, double x2, double y1, double y2){ // Calculates the distance between Turtle and goal
-  return sqrt(pow((x2-x1),2)+pow((y2-y1),2));  // Distance 
+Turtle::getDistance(float x1, float x2, float y1, float y2){ // Calculates the distance between Turtle and goal
+  return sqrt(pow((x2-x1),2)+pow((y2-y1),2));                // Distance formula
 }
 
 Turtle::movetoGoal(turtlesim::Pose turtlesim_Pose, Turtle::getDisTol()){  // Calls instance "turtlesim_pose" and the getter "Turtle::getDisTol()"
@@ -147,9 +146,6 @@ int main(int argc, char **argv)        // Initation of main
 {
   ros::init(argc, argv, "navigation"); // initiation ROS
   ros::Nodehandle n;
-
-  velocity_publisher = n.advertise<geometry_msgs::Twist>("/turtle1/cmd_vel", 100);
-	pose_subscriber = n.subscribe("/turtle1/pose", 10);
 
   turtlesim::Pose turtlesim_Pose;      // Creating an instance of turtlesim::Pose called turtlesim_Pose
   Nav nav;                             // Creating instance of Nav class
