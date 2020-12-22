@@ -1,12 +1,12 @@
 // includes - reading of all files needed
 #include <ros/ros.h>
-#include <move_base_msgs/MoveBaseAction.h>
-#include <actionlib/client/simple_action_client.h>
 #include <iostream>
 #include <stdlib.h>
-#include <nav_msgs/Odometry.h>
+#include <geometry_msgs/Twist.h>
+#include <turtlesim/Pose.h>
+#include <math.h>
 
-typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient; // type definition - everything from left saved as MoveBaseClient
+//typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient; // type definition - everything from left saved as MoveBaseClient
 
 class Nav
 {
@@ -93,39 +93,64 @@ void Nav::calc_new_goal()   // void function that updates the current location, 
   }
 }
 
-int main(int argc, char **argv) // initation of main
+class Turlte 
 {
-  ros::init(argc, argv, "demining_2"); // initiation ROS
+  private:
+  double distance_tolerance;
+  float lin_speed_multi, ang_vel_multi;
+  public:
+  void movetoGoal();                                // Function
+  double getDistance();                             // Function
+  double getDisTol() { return distance_tolerance; } // Getter/accessor 
+  float getLSM() { return lin_speed_multi; }        // Getter/accessor
+  float getAVM() { return ang_vel_multi; }          // Getter/accessor
+}
 
-  MoveBaseClient ac("move_base", true); // using the previous typedef to initiate client from actionlib.h as "ac"
+Turtle::getDistance(double x1, double x2, double y1, double y2){ // Calculates the distance between Turtle and goal
+  return sqrt(pow((x2-x1),2)+pow((y2-y1),2));  // Distance 
+}
 
-  while (!ac.waitForServer(ros::Duration(5.0))) // connecting ac to server with 5 second buffer
+Turtle::movetoGoal(turtlesim::Pose turtlesim_Pose, Turtle::getDisTol()){  // Calls instance "turtlesim_pose" and the getter "Turtle::getDisTol()"
+  geometry_msgs::Twist vel_msg; // Creating an instance of the geometry_msgs called "vel_msg"
+
+  do                            // Changes the velocities of the Turtle
   {
-    ROS_INFO("Waiting for the move_base action server"); // printing statement to terminal
-  }
+    // Linear velocities
+    vel_msg.linear.x = Turtle::getLSM()*getDistance(turtlesim_Pose.x, turtlesim_Pose.y, nav.get_x(), nav.get_y()); // Assigns linear velocity to x based on the distance to goal 
+    vel_msg.linear.y = 0;
+    vel_msg.linear.z = 0;
+    // Angular velocities
+    vel_msg.angular.x = 0;
+    vel_msg.angular.y = 0;
+    vel_msg.angular.z = Turtle::getAVM()*(atan2(nav.get_y()-turtlesim_Pose.y, nav.get_x()-turtlesim_Pose.x)-turtle_Pose.theta); // Assigns angular velocity to z based on 
+    
+    velocity_publisher.publish(vel_msg);
 
-  move_base_msgs::MoveBaseGoal goal; // creating instance of MoveBaseGoal named "goal"
+  } while (getDistance(turtlesim_Pose.x, turtlesim_Pose.y, nav.get_x(), nav.get_y())>Turtle::getDisTol());
+  // Ending the movement of the Turtle
+  vel_msg.linear.x = 0;
+  vel_msg.angular.z = 0;
+  velocity_publisher.publish(vel_msg);
+}
 
-  goal.target_pose.header.frame_id = "odom";        // initiating goal frame_id as "odom"
-  goal.target_pose.header.stamp = ros::Time::now(); // initiation stamp as ros::Time::now()
+int main(int argc, char **argv)        // Initation of main
+{
+  ros::init(argc, argv, "navigation"); // initiation ROS
+  ros::Nodehandle n;
 
-  Nav nav; // creating instance of Nav class
+  velocity_publisher = n.advertise<geometry_msgs::Twist>("/turtle1/cmd_vel", 100);
+	pose_subscriber = n.subscribe("/turtle1/pose", 10);
 
-  while (nav.get_state() != 0) //while loop running while nav.state differs from 0
+  turtlesim::Pose turtlesim_Pose;      // Creating an instance of turtlesim::Pose called turtlesim_Pose
+  Nav nav;                             // Creating instance of Nav class
+  Turtle controller;                   // Creating instance of Turtle class
+
+  // Har måske brug for en teleport til et andet sted end i midten
+
+  while (nav.get_state() != 0)         //while loop running while nav.state differs from 0
   {
-    nav.calc_new_goal(); // Calls the calc_new_goal function
-
-    goal.target_pose.pose.position.x = nav.get_x(); // assigning new target_x from nav.goal_x
-    goal.target_pose.pose.position.y = nav.get_y(); // assigning new target_y from nav.goal_y
-    goal.target_pose.pose.orientation.w = 1.0;      // assign target orientation
-
-    ac.sendGoal(goal); // sends the new goal to the server
-
-    ac.waitForResult(); // wait for server to respond
-
-    while (ac.getState() != actionlib::SimpleClientGoalState::SUCCEEDED) // while loop running while goal is not reached
-    {
-    }
+    nav.calc_new_goal();               // Calls the calc_new_goal function
+    controller.movetoGoal();           // Calls the movetoGoal function. This also publishes the velocities. 
   }
   return 0;
 }
