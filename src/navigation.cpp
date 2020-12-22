@@ -99,11 +99,22 @@ class Turlte
   double distance_tolerance;
   float lin_speed_multi, ang_vel_multi;
   public:
+  Turtle();                                         // Constructor
   void movetoGoal();                                // Function
   double getDistance();                             // Function
   double getDisTol() { return distance_tolerance; } // Getter/accessor 
   float getLSM() { return lin_speed_multi; }        // Getter/accessor
   float getAVM() { return ang_vel_multi; }          // Getter/accessor
+}
+
+Turtle::Turtle()
+{
+    std::cout << "Insert distance tolerance in meters: ";
+    std::cin >> distance_tolerance;
+    std::cout << "Insert line speed multiplyer: ";
+    std::cin >> lin_speed_multi;
+    std::cout << "Insert angular velocity multiplyer";
+    std::cin >> ang_vel_multi;
 }
 
 Turtle::getDistance(double x1, double x2, double y1, double y2){ // Calculates the distance between Turtle and goal
