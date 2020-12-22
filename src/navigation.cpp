@@ -83,7 +83,7 @@ void Nav::calc_new_goal()   // void function that updates the current location, 
     }
     break;
   }
-  if (goal_y > area_width){ // If-statement that checks to see if the switch put the goal outside the area
+  if (goal_y > area_width){                                                   // If-statement that checks to see if the switch put the goal outside the area
     goal_x = 0;
     goal_y = 0;
     state = 0;
@@ -96,14 +96,14 @@ class Turtle
   float distance_tolerance, lin_speed_multi, ang_vel_multi;
   public:
   Turtle();                                                                    // Constructor
-  float getDisTol() { return distance_tolerance; }                             // Getter/accessor            
-  void movetoGoal(turtlesim::Pose turtlesim_Pose, float Turtle::getDisTol());  // Function
+  //float getDisTol() { return distance_tolerance; }                           // Getter/accessor            
+  void movetoGoal(turtlesim::Pose turtlesim_Pose, float x, float y);           // Function
   float getDistance(float x1, float x2, float y1, float y2);                   // Function
   float getLSM() { return lin_speed_multi; }                                   // Getter/accessor
   float getAVM() { return ang_vel_multi; }                                     // Getter/accessor
 };
 
-Turtle::Turtle() // The no arg-constructor is set to ask the user for input to set the multiplyers and the distance tolerance
+Turtle::Turtle()                                                               // The no arg-constructor is set to ask the user for input to set the multiplyers and the distance tolerance
 {
     std::cout << "Insert distance tolerance in meters: ";
     std::cin >> distance_tolerance;
@@ -113,31 +113,33 @@ Turtle::Turtle() // The no arg-constructor is set to ask the user for input to s
     std::cin >> ang_vel_multi;
 }
 
-float Turtle::getDistance(float x1, float x2, float y1, float y2){ // Calculates the distance between Turtle and goal
-  return sqrt(pow((x2-x1),2)+pow((y2-y1),2));                // Distance formula
+float Turtle::getDistance(float x1, float x2, float y1, float y2){              // Calculates the distance between Turtle and goal
+  return sqrt(pow((x2-x1),2)+pow((y2-y1),2));                                   // Distance formula
 }
 
-void Turtle::movetoGoal(turtlesim::Pose turtlesim_Pose, float Turtle::getDisTol()){  // Calls instance "turtlesim_pose" and the getter "Turtle::getDisTol()"
-  geometry_msgs::Twist vel_msg; // Creating an instance of the geometry_msgs called "vel_msg"
+void Turtle::movetoGoal(turtlesim::Pose turtlesim_Pose, float x, float y){      // Calls instance "turtlesim_pose" and the getter "Turtle::getDisTol()"
+  geometry_msgs::Twist vel_msg;                                                 // Creating an instance of the geometry_msgs called "vel_msg"
 
-  do                            // Changes the velocities of the Turtle
+  do                                                                            // Changes the velocities of the Turtle
   {
     // Linear velocities
-    vel_msg.linear.x = Turtle::getLSM()*getDistance(turtlesim_Pose.x, turtlesim_Pose.y, nav.get_x(), nav.get_y()); // Assigns linear velocity to x based on the distance to goal 
+    vel_msg.linear.x = lin_speed_multi*getDistance(turtlesim_Pose.x, turtlesim_Pose.y, x, y); // Assigns linear velocity to x based on the distance to goal 
     vel_msg.linear.y = 0;
     vel_msg.linear.z = 0;
     // Angular velocities
     vel_msg.angular.x = 0;
     vel_msg.angular.y = 0;
-    vel_msg.angular.z = Turtle::getAVM()*(atan2(nav.get_y()-turtlesim_Pose.y, nav.get_x()-turtlesim_Pose.x)-turtle_Pose.theta); // Assigns angular velocity to z based on 
+    vel_msg.angular.z = ang_vel_multi*(atan2(y-turtlesim_Pose.y, x-turtlesim_Pose.x)-turtlesim_Pose.theta); // Assigns angular velocity to z based on 
     
     velocity_publisher.publish(vel_msg);
 
-  } while (getDistance(turtlesim_Pose.x, turtlesim_Pose.y, nav.get_x(), nav.get_y())>Turtle::getDisTol());
+  } while (getDistance(turtlesim_Pose.x, turtlesim_Pose.y, x, y)>distance_tolerance);
   // Ending the movement of the Turtle
-  vel_msg.linear.x = 0;
-  vel_msg.angular.z = 0;
-  velocity_publisher.publish(vel_msg);
+
+    vel_msg.linear.y = 0;
+    vel_msg.linear.x = 0;
+    vel_msg.angular.z = 0;
+    velocity_publisher.publish(vel_msg);
 }
 
 int main(int argc, char **argv)        // Initation of main
@@ -158,16 +160,22 @@ int main(int argc, char **argv)        // Initation of main
     turtlesim_Pose.x = 1;
     turtlesim_Pose.y = 1;
     turtlesim_Pose.theta = 0;
-    movetoGoal(turtlesim_Pose, 0,01);
+    controller.movetoGoal(turtlesim_Pose, nav.get_x(), nav.get_y());
   }
-  
+
+  void poseCallback(const turtlesim::Pose::ConstPtr & pose_message)
+  {
+    turtlesim_Pose.x=pose_message->x;
+    turtlesim_Pose.y=pose_message->y;
+    turtlesim_Pose.theta=pose_message->theta;
+  }
 
   // Har måske brug for en teleport til et andet sted end i midten
 
   while (nav.get_state() != 0)         //while loop running while nav.state differs from 0
   {
     nav.calc_new_goal();               // Calls the calc_new_goal function
-    controller.movetoGoal();           // Calls the movetoGoal function. This also publishes the velocities. 
+    controller.movetoGoal(turtlesim_Pose,nav.get_x(), nav.get_y());           // Calls the movetoGoal function. This also publishes the velocities. 
   }
   return 0;
 }
