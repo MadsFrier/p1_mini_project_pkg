@@ -117,7 +117,7 @@ float Turtle::getDistance(float x1, float x2, float y1, float y2){ // Calculates
   return sqrt(pow((x2-x1),2)+pow((y2-y1),2));                // Distance formula
 }
 
-void Turtle::movetoGoal(turtlesim::Pose turtlesim_Pose, Turtle::getDisTol()){  // Calls instance "turtlesim_pose" and the getter "Turtle::getDisTol()"
+void Turtle::movetoGoal(turtlesim::Pose turtlesim_Pose, float Turtle::getDisTol()){  // Calls instance "turtlesim_pose" and the getter "Turtle::getDisTol()"
   geometry_msgs::Twist vel_msg; // Creating an instance of the geometry_msgs called "vel_msg"
 
   do                            // Changes the velocities of the Turtle
@@ -143,7 +143,7 @@ void Turtle::movetoGoal(turtlesim::Pose turtlesim_Pose, Turtle::getDisTol()){  /
 int main(int argc, char **argv)        // Initation of main
 {
   ros::init(argc, argv, "navigation"); // initiation ROS
-  ros::Nodehandle n;
+  ros::NodeHandle n;
   ros::Publisher velocity_publisher;
   ros::Subscriber pose_subscriber;
 
@@ -151,6 +151,12 @@ int main(int argc, char **argv)        // Initation of main
   pose_subscriber = n.subscribe("/turtle1/pose", 10);
 
   turtlesim::Pose turtlesim_Pose;      // Creating an instance of turtlesim::Pose called turtlesim_Pose
+  {
+    turtlesim_Pose.x = 1;
+    turtlesim_Pose.y = 1;
+    turtlesim_Pose.theta = 0;
+    Turtle::movetoGoal(turtlesim_Pose, 0,01)
+  }
   Nav nav;                             // Creating instance of Nav class
   Turtle controller;                   // Creating instance of Turtle class
 
