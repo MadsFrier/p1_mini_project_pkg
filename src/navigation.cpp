@@ -152,14 +152,20 @@ void Turtle::printPose(const turtlesim::Pose::ConstPtr& message)
 
 int main(int argc, char **argv)        // Initation of main  Tjek det her @christianhjorth 
 {
+  std::cout << "We launched boyy";
   ros::init(argc, argv, "navigation"); // initiation ROS
 
   ros::NodeHandle n;
   ros::Publisher velocity_publisher;
   ros::Subscriber pose_subscriber;
 
+  ROS_INFO("part one succeded");
+
   Nav nav;                             // Creating instance of Nav class
   Turtle controller;                   // Creating instance of Turtle class
+
+
+  ROS_INFO("part two succeded");
 
   pose_subscriber = n.subscribe("/turtle1/pose", 10, &Turtle::printPose, &controller);
   velocity_publisher = n.advertise<geometry_msgs::Twist>("/turtle1/cmd_vel", 100,  &controller);
@@ -167,6 +173,10 @@ int main(int argc, char **argv)        // Initation of main  Tjek det her @chris
 
   turtlesim::Pose turtlesim_Pose;      // Creating an instance of turtlesim::Pose called turtlesim_Pose
   
+  
+  ROS_INFO("part three succeded");  // Har måske brug for en teleport til et andet sted end i midten
+
+
   {
     // Starting location
     turtlesim_Pose.x = 1;
@@ -175,12 +185,14 @@ int main(int argc, char **argv)        // Initation of main  Tjek det her @chris
     controller.movetoGoal(turtlesim_Pose, nav.get_x(), nav.get_y(), velocity_publisher);
   }
 
-  // Har måske brug for en teleport til et andet sted end i midten
+  ROS_INFO("part four succeded");
 
   while (nav.get_state() != 0)         //while loop running while nav.state differs from 0
   {
     nav.calc_new_goal();               // Calls the calc_new_goal function
-    controller.movetoGoal(turtlesim_Pose, nav.get_x(), nav.get_y(), velocity_publisher);           // Calls the movetoGoal function. This also publishes the velocities. 
+    controller.movetoGoal(turtlesim_Pose, nav.get_x(), nav.get_y(), velocity_publisher);  
+    
+  ROS_INFO("LOOOOOP");         // Calls the movetoGoal function. This also publishes the velocities. 
   }
   return 0;
 }
