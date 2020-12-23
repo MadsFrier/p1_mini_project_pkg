@@ -94,15 +94,15 @@ class Turtle
 {
   private:
   float distance_tolerance, lin_speed_multi, ang_vel_multi;
+  ros::Publisher velocity_publisher;
+  ros::Subscriber pose_subscriber;
 
   public:
   Turtle();                                                                    // Constructor
-  //float getDisTol() { return distance_tolerance; }                           // Getter/accessor            
-  void movetoGoal(turtlesim::Pose turtlesim_Pose, float x, float y, ros::Publisher pub);           // Function
-  float getDistance(float x1, float x2, float y1, float y2);                   // Function
-  float getLSM() { return lin_speed_multi; }                                   // Getter/accessor
-  float getAVM() { return ang_vel_multi; }    
-  void  printPose(const turtlesim::Pose::ConstPtr& message);                                 // Getter/accessor
+  //float getDisTol() { return distance_tolerance; }                                     
+  void movetoGoal(turtlesim::Pose turtlesim_Pose, float x, float y, &this);    // Function
+  float getDistance(float x1, float x2, float y1, float y2);                   // Function 
+  void  printPose(const turtlesim::Pose::ConstPtr& message);                   
 };
 
 Turtle::Turtle()                                                               // The no arg-constructor is set to ask the user for input to set the multiplyers and the distance tolerance
@@ -113,19 +113,22 @@ Turtle::Turtle()                                                               /
     std::cin >> lin_speed_multi;
     std::cout << "Insert angular velocity multiplyer";
     std::cin >> ang_vel_multi;
+
+    pose_subscriber = n.subscribe("/turtle1/pose", 10, &Turtle::printPose, &this);
+    velocity_publisher = n.advertise<geometry_msgs::Twist>("/turtle1/cmd_vel", 100,  &this);
   }
 
 float Turtle::getDistance(float x1, float x2, float y1, float y2){              // Calculates the distance between Turtle and goal
   return sqrt(pow((x2-x1),2)+pow((y2-y1),2));                                   // Distance formula
 }
 
-void Turtle::movetoGoal(turtlesim::Pose turtlesim_Pose, float x, float y, ros::Publisher pub){      // Calls instance "turtlesim_pose" and the getter "Turtle::getDisTol()"
+void Turtle::movetoGoal(turtlesim::Pose turtlesim_Pose, float x, float y, &this){      // Calls instance "turtlesim_pose" and the getter "Turtle::getDisTol()"
   geometry_msgs::Twist vel_msg;                                                 // Creating an instance of the geometry_msgs called "vel_msg"
 
   do                                                                            // Changes the velocities of the Turtle
   {
     // Linear velocities
-    vel_msg.linear.x = lin_speed_multi*getDistance(turtlesim_Pose.x, turtlesim_Pose.y, x, y); // Assigns linear velocity to x based on the distance to goal 
+    vel_msg.linear.x = lin_speed_multi*getDistance(x, turtlesim_Pose.x, y, turtlesim_Pose.y); // Assigns linear velocity to x based on the distance to goal 
     vel_msg.linear.y = 0;
     vel_msg.linear.z = 0;
     // Angular velocities
@@ -133,7 +136,7 @@ void Turtle::movetoGoal(turtlesim::Pose turtlesim_Pose, float x, float y, ros::P
     vel_msg.angular.y = 0;
     vel_msg.angular.z = ang_vel_multi*(atan2(y-turtlesim_Pose.y, x-turtlesim_Pose.x)-turtlesim_Pose.theta); // Assigns angular velocity to z based on 
     
-    pub.publish(vel_msg);
+    this.publish(vel_msg);
 
   } while (getDistance(turtlesim_Pose.x, turtlesim_Pose.y, x, y)>distance_tolerance);
   // Ending the movement of the Turtle
@@ -142,7 +145,7 @@ void Turtle::movetoGoal(turtlesim::Pose turtlesim_Pose, float x, float y, ros::P
     vel_msg.linear.x = 0;
     vel_msg.angular.z = 0;
     
-    pub.publish(vel_msg);
+    this.publish(vel_msg);
 }
 void Turtle::printPose(const turtlesim::Pose::ConstPtr& message)
 {
@@ -156,43 +159,41 @@ int main(int argc, char **argv)        // Initation of main  Tjek det her @chris
   ros::init(argc, argv, "navigation"); // initiation ROS
 
   ros::NodeHandle n;
-  ros::Publisher velocity_publisher;
-  ros::Subscriber pose_subscriber;
 
-  ROS_INFO("part one succeded");
+  ROS_INFO("ROS initiation succeded");
 
   Nav nav;                             // Creating instance of Nav class
+
+  ROS_INFO("Created instance for navigation");
+
   Turtle controller;                   // Creating instance of Turtle class
 
-
-  ROS_INFO("part two succeded");
-
-  pose_subscriber = n.subscribe("/turtle1/pose", 10, &Turtle::printPose, &controller);
-  velocity_publisher = n.advertise<geometry_msgs::Twist>("/turtle1/cmd_vel", 100,  &controller);
-  ros::spin();
+  ros::spin(); 
+  
+  ROS_INFO("Created instance for navigational controller"); 
 
   turtlesim::Pose turtlesim_Pose;      // Creating an instance of turtlesim::Pose called turtlesim_Pose
-  
-  
-  ROS_INFO("part three succeded");  // Har måske brug for en teleport til et andet sted end i midten
 
-
+  ROS_INFO("Created instance for turtlesim Pose");
+  
   {
-    // Starting location
+    ROS_INFO("Moving to starting location");
     turtlesim_Pose.x = 1;
     turtlesim_Pose.y = 1;
     turtlesim_Pose.theta = 0;
     controller.movetoGoal(turtlesim_Pose, nav.get_x(), nav.get_y(), velocity_publisher);
   }
 
-  ROS_INFO("part four succeded");
+  ROS_INFO("Initial movement succeded");
 
   while (nav.get_state() != 0)         //while loop running while nav.state differs from 0
   {
+    ROS_INFO("LOOOOOP");
     nav.calc_new_goal();               // Calls the calc_new_goal function
-    controller.movetoGoal(turtlesim_Pose, nav.get_x(), nav.get_y(), velocity_publisher);  
-    
-  ROS_INFO("LOOOOOP");         // Calls the movetoGoal function. This also publishes the velocities. 
+    ROS_INFO("Calculated new goal");
+    controller.movetoGoal(turtlesim_Pose, nav.get_x(), nav.get_y(), velocity_publisher);
+    ROS_INFO("Moved to goal"); 
+             // Calls the movetoGoal function. This also publishes the velocities. 
   }
   return 0;
 }
