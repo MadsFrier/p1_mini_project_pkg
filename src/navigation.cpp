@@ -160,6 +160,7 @@ int main(int argc, char **argv)        // Initation of main  Tjek det her @chris
   controller.movetoGoal(turtlesim_Pose, 1.0, 1.0);
   ROS_INFO("Initial movement succeded");
   */
+ //
   while (nav.get_state() != 0)
   {
     ROS_INFO("LOOOOOP");
