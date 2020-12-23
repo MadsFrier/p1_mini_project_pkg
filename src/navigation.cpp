@@ -152,7 +152,7 @@ void Turtle::printPose(const turtlesim::Pose::ConstPtr& message)
 }
 
 
-int main(int argc, char **argv)        // Initation of main
+int main(int argc, char **argv)        // Initation of main  Tjek det her @christianhjorth 
 {
   ros::init(argc, argv, "navigation"); // initiation ROS
 
