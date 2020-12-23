@@ -94,18 +94,17 @@ class Turtle
 {
   private:
   float distance_tolerance, lin_speed_multi, ang_vel_multi;
-  ros::Publisher velocity_publisher;
-  ros::Subscriber pose_subscriber;
+  ros::Publisher _pub;
+  ros::Subscriber _sub;
 
   public:
-  Turtle();                                                                    // Constructor
-  //float getDisTol() { return distance_tolerance; }                                     
-  void movetoGoal(turtlesim::Pose turtlesim_Pose, float x, float y, &this);    // Function
-  float getDistance(float x1, float x2, float y1, float y2);                   // Function 
+  Turtle(ros::Publisher pub);                                                                    // Constructor                                    
+  void movetoGoal(turtlesim::Pose turtlesim_Pose, float x, float y);                             // Function
+  float getDistance(float x1, float x2, float y1, float y2);                                     // Function 
   void  printPose(const turtlesim::Pose::ConstPtr& message);                   
 };
 
-Turtle::Turtle()                                                               // The no arg-constructor is set to ask the user for input to set the multiplyers and the distance tolerance
+Turtle::Turtle(ros::Publisher pub)                                                               // The no arg-constructor is set to ask the user for input to set the multiplyers and the distance tolerance
 {
     std::cout << "Insert distance tolerance in meters: ";
     std::cin >> distance_tolerance;
@@ -113,20 +112,19 @@ Turtle::Turtle()                                                               /
     std::cin >> lin_speed_multi;
     std::cout << "Insert angular velocity multiplyer";
     std::cin >> ang_vel_multi;
-
-    pose_subscriber = n.subscribe("/turtle1/pose", 10, &Turtle::printPose, &this);
-    velocity_publisher = n.advertise<geometry_msgs::Twist>("/turtle1/cmd_vel", 100,  &this);
+    _pub = pub;
   }
 
 float Turtle::getDistance(float x1, float x2, float y1, float y2){              // Calculates the distance between Turtle and goal
   return sqrt(pow((x2-x1),2)+pow((y2-y1),2));                                   // Distance formula
 }
 
-void Turtle::movetoGoal(turtlesim::Pose turtlesim_Pose, float x, float y, &this){      // Calls instance "turtlesim_pose" and the getter "Turtle::getDisTol()"
+void Turtle::movetoGoal(turtlesim::Pose turtlesim_Pose, float x, float y){      // Calls instance "turtlesim_pose" and the getter "Turtle::getDisTol()"
   geometry_msgs::Twist vel_msg;                                                 // Creating an instance of the geometry_msgs called "vel_msg"
-
+    ROS_INFO("function called"); 
   do                                                                            // Changes the velocities of the Turtle
-  {
+  { 
+    //ROS_INFO("loop initiated"); 
     // Linear velocities
     vel_msg.linear.x = lin_speed_multi*getDistance(x, turtlesim_Pose.x, y, turtlesim_Pose.y); // Assigns linear velocity to x based on the distance to goal 
     vel_msg.linear.y = 0;
@@ -136,16 +134,22 @@ void Turtle::movetoGoal(turtlesim::Pose turtlesim_Pose, float x, float y, &this)
     vel_msg.angular.y = 0;
     vel_msg.angular.z = ang_vel_multi*(atan2(y-turtlesim_Pose.y, x-turtlesim_Pose.x)-turtlesim_Pose.theta); // Assigns angular velocity to z based on 
     
-    this.publish(vel_msg);
+    //ROS_INFO("redy to publish"); 
+    _pub.publish(vel_msg);
+    //ROS_INFO("published"); 
+    ros::spinOnce();
+    //ROS_INFO_STREAM(vel_msg);
+
 
   } while (getDistance(turtlesim_Pose.x, turtlesim_Pose.y, x, y)>distance_tolerance);
   // Ending the movement of the Turtle
-
+    ROS_INFO("loop ended"); 
     vel_msg.linear.y = 0;
     vel_msg.linear.x = 0;
     vel_msg.angular.z = 0;
     
-    this.publish(vel_msg);
+    _pub.publish(vel_msg);
+    ROS_INFO("function done"); 
 }
 void Turtle::printPose(const turtlesim::Pose::ConstPtr& message)
 {
@@ -158,7 +162,12 @@ int main(int argc, char **argv)        // Initation of main  Tjek det her @chris
   std::cout << "We launched boyy";
   ros::init(argc, argv, "navigation"); // initiation ROS
 
+  ROS_INFO("0");
+  ros::Publisher velocity_publisher;
+  ROS_INFO("1");
   ros::NodeHandle n;
+  ROS_INFO("2");
+  velocity_publisher = n.advertise<geometry_msgs::Twist>("/turtle1/cmd_vel", 100);
 
   ROS_INFO("ROS initiation succeded");
 
@@ -166,14 +175,14 @@ int main(int argc, char **argv)        // Initation of main  Tjek det her @chris
 
   ROS_INFO("Created instance for navigation");
 
-  Turtle controller;                   // Creating instance of Turtle class
-
-  ros::spin(); 
-  
+  Turtle controller {velocity_publisher};                   // Creating instance of Turtle class
+  ROS_INFO("Spin start"); 
+  //ros::spin(); 
+  ROS_INFO("Spin stop"); 
   ROS_INFO("Created instance for navigational controller"); 
 
   turtlesim::Pose turtlesim_Pose;      // Creating an instance of turtlesim::Pose called turtlesim_Pose
-
+  ROS_INFO_STREAM(turtlesim_Pose);
   ROS_INFO("Created instance for turtlesim Pose");
   
   {
@@ -181,7 +190,10 @@ int main(int argc, char **argv)        // Initation of main  Tjek det her @chris
     turtlesim_Pose.x = 1;
     turtlesim_Pose.y = 1;
     turtlesim_Pose.theta = 0;
-    controller.movetoGoal(turtlesim_Pose, nav.get_x(), nav.get_y(), velocity_publisher);
+    //ROS_INFO_STREAM(turtlesim_Pose);
+    ROS_INFO("controllertest start"); 
+    controller.movetoGoal(turtlesim_Pose, nav.get_x(), nav.get_y());
+    ROS_INFO("controllertest stop"); 
   }
 
   ROS_INFO("Initial movement succeded");
@@ -191,7 +203,7 @@ int main(int argc, char **argv)        // Initation of main  Tjek det her @chris
     ROS_INFO("LOOOOOP");
     nav.calc_new_goal();               // Calls the calc_new_goal function
     ROS_INFO("Calculated new goal");
-    controller.movetoGoal(turtlesim_Pose, nav.get_x(), nav.get_y(), velocity_publisher);
+    controller.movetoGoal(turtlesim_Pose, nav.get_x(), nav.get_y());
     ROS_INFO("Moved to goal"); 
              // Calls the movetoGoal function. This also publishes the velocities. 
   }
