@@ -5,6 +5,7 @@
 #include <geometry_msgs/Twist.h>
 #include <turtlesim/Pose.h>
 #include <math.h>
+#include <ros/callback_queue.h>
 
 class Nav
 {
@@ -83,16 +84,18 @@ void Nav::calc_new_goal()   // void function that updates the current location, 
 class Turtle 
 {
   private:
-  float distance_tolerance, lin_speed_multi, ang_vel_multi;
+  float distance_tolerance, lin_speed_multi, ang_vel_multi, tPosex, tPosey, tPosetheta;
   public:
   ros::NodeHandle n;
-  ros::Publisher velocity_publisher = n.advertise<geometry_msgs::Twist>("/turtle1/cmd_vel", 100);
-  ros::Subscriber pose_sub = n.subscribe("/turtle1/pose", 1, &Turtle::poseCallback, this);
-  turtlesim::Pose turtlesim_Pose;
+  ros::Publisher velocity_publisher = n.advertise<geometry_msgs::Twist>("/turtle1/cmd_vel", 1000);
+  ros::Subscriber pose_sub = n.subscribe("/turtle1/pose", 100, &Turtle::poseCallback, this);
   Turtle();                                                                                                        
-  void movetoGoal(turtlesim::Pose turtlesim_Pose, float x, float y);    
+  void movetoGoal(float tPx, float tPy, float tPt, float goal_x, float goal_y);    
   float getDistance(float x1, float x2, float y1, float y2);   
-  void poseCallback(const turtlesim::Pose::ConstPtr& message);              
+  void poseCallback(const turtlesim::Pose::ConstPtr& message); 
+  float get_tPosex() { return tPosex; }
+  float get_tPosey() { return tPosey; }
+  float get_tPosetheta() { return tPosetheta; }            
 };
 
 Turtle::Turtle()                                                               
@@ -105,60 +108,57 @@ Turtle::Turtle()
     std::cin >> ang_vel_multi;
   }
 
-float Turtle::getDistance(float x1, float x2, float y1, float y2){              
+float Turtle::getDistance(float x1, float y1, float x2, float y2){              
   return sqrt(pow((x2-x1),2)+pow((y2-y1),2));
 }
 
-void Turtle::movetoGoal(turtlesim::Pose turtlesim_Pose, float x, float y){      
+void Turtle::movetoGoal(float tPx, float tPy, float tPt, float goal_x, float goal_y){      
   geometry_msgs::Twist vel_msg; 
-  do                                                                            
-  {
+  ros::Rate loop_rate(1);
+  while(getDistance(tPx, tPy, goal_x, goal_y)>=distance_tolerance){
     ros::spinOnce();
+    loop_rate.sleep();
     // Linear velocities
-    vel_msg.linear.x = lin_speed_multi*getDistance(turtlesim_Pose.x, x, turtlesim_Pose.y, y); // Assigns linear velocity to x based on the distance to goal 
+    vel_msg.linear.x = lin_speed_multi*getDistance(tPx, tPy, goal_x, goal_y); 
     vel_msg.linear.y = 0;
     vel_msg.linear.z = 0;
     // Angular velocities
     vel_msg.angular.x = 0;
     vel_msg.angular.y = 0;
-    vel_msg.angular.z = (atan2(y-turtlesim_Pose.y, x-turtlesim_Pose.x)-turtlesim_Pose.theta);  // Assigns angular velocity to z based on 
+    vel_msg.angular.z = ang_vel_multi*(atan2(goal_y-tPy, goal_x-tPx)-tPt);
     
     velocity_publisher.publish(vel_msg);
 
-    ros::spinOnce();
-
-  } while (getDistance(turtlesim_Pose.x, x, turtlesim_Pose.y, y)>distance_tolerance);
+    ROS_INFO_STREAM(vel_msg);
+  }
   // Ending the movement of the Turtle
-
     vel_msg.linear.y = 0;
     vel_msg.linear.x = 0;
     vel_msg.angular.z = 0;
     
     velocity_publisher.publish(vel_msg);
 }
- void Turtle::poseCallback(const turtlesim::Pose::ConstPtr& message){
-   turtlesim_Pose.x = message->x;
-   turtlesim_Pose.y = message->y;
-   turtlesim_Pose.theta = message->theta;
+ void Turtle::poseCallback(const turtlesim::Pose::ConstPtr& pose_sub){
+   tPosex = pose_sub->x;
+   tPosey = pose_sub->y;
+   tPosetheta = pose_sub->theta;
   }
 
 int main(int argc, char **argv)        // Initation of main   
 {
   ros::init(argc, argv, "navigation"); // initiation ROS
-
-  Nav nav; 
+  
 
   Turtle controller; 
+  // Movement to initial point
+  controller.movetoGoal(controller.get_tPosex(), controller.get_tPosey(), controller.get_tPosetheta(), 1.0, 1.0);
+  ros::spinOnce();
 
-  // Initial point 
-  controller.turtlesim_Pose.x=1;
-  controller.turtlesim_Pose.y=1;
-  controller.turtlesim_Pose.theta=0;
+  Nav nav;
   while (nav.get_state() != 0)
   {
-    controller.movetoGoal(controller.turtlesim_Pose, nav.get_x(), nav.get_y());
-    ros::spinOnce();
     nav.calc_new_goal();
+    controller.movetoGoal(controller.get_tPosex(), controller.get_tPosey(), controller.get_tPosetheta(), nav.get_x(), nav.get_y());
   }
   return 0;
 }
