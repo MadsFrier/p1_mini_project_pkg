@@ -83,14 +83,16 @@ void Nav::calc_new_goal()   // void function that updates the current location, 
 class Turtle 
 {
   private:
-  float distance_tolerance, lin_speed_multi, ang_vel_multi, inter_pub;
+  float distance_tolerance, lin_speed_multi, ang_vel_multi;
   public:
   ros::NodeHandle n;
   ros::Publisher velocity_publisher = n.advertise<geometry_msgs::Twist>("/turtle1/cmd_vel", 100);
+  ros::Subscriber pose_sub = n.subscribe("/turtle1/pose", 1, &Turtle::poseCallback, this);
+  turtlesim::Pose turtlesim_Pose;
   Turtle();                                                                                                        
   void movetoGoal(turtlesim::Pose turtlesim_Pose, float x, float y);    
-  float getDistance(float x1, float x2, float y1, float y2);                   
-  void  printPose(const turtlesim::Pose::ConstPtr& message);                 
+  float getDistance(float x1, float x2, float y1, float y2);   
+  void poseCallback(const turtlesim::Pose::ConstPtr& message);              
 };
 
 Turtle::Turtle()                                                               
@@ -108,10 +110,10 @@ float Turtle::getDistance(float x1, float x2, float y1, float y2){
 }
 
 void Turtle::movetoGoal(turtlesim::Pose turtlesim_Pose, float x, float y){      
-  geometry_msgs::Twist vel_msg;                                                 
-
+  geometry_msgs::Twist vel_msg; 
   do                                                                            
   {
+    ros::spinOnce();
     // Linear velocities
     vel_msg.linear.x = lin_speed_multi*getDistance(turtlesim_Pose.x, x, turtlesim_Pose.y, y); // Assigns linear velocity to x based on the distance to goal 
     vel_msg.linear.y = 0;
@@ -119,9 +121,11 @@ void Turtle::movetoGoal(turtlesim::Pose turtlesim_Pose, float x, float y){
     // Angular velocities
     vel_msg.angular.x = 0;
     vel_msg.angular.y = 0;
-    vel_msg.angular.z = ang_vel_multi*(atan2(y-turtlesim_Pose.y, x-turtlesim_Pose.x)-turtlesim_Pose.theta);  // Assigns angular velocity to z based on 
+    vel_msg.angular.z = (atan2(y-turtlesim_Pose.y, x-turtlesim_Pose.x)-turtlesim_Pose.theta);  // Assigns angular velocity to z based on 
     
     velocity_publisher.publish(vel_msg);
+
+    ros::spinOnce();
 
   } while (getDistance(turtlesim_Pose.x, x, turtlesim_Pose.y, y)>distance_tolerance);
   // Ending the movement of the Turtle
@@ -132,44 +136,29 @@ void Turtle::movetoGoal(turtlesim::Pose turtlesim_Pose, float x, float y){
     
     velocity_publisher.publish(vel_msg);
 }
-void Turtle::printPose(const turtlesim::Pose::ConstPtr& message)
-{
-  std::cout << "turtle at[" << message ->x << ", " << message->y <<"]" << std::endl;
-}
+ void Turtle::poseCallback(const turtlesim::Pose::ConstPtr& message){
+   turtlesim_Pose.x = message->x;
+   turtlesim_Pose.y = message->y;
+   turtlesim_Pose.theta = message->theta;
+  }
 
-
-int main(int argc, char **argv)        // Initation of main  Tjek det her @christianhjorth 
+int main(int argc, char **argv)        // Initation of main   
 {
-  std::cout << "We launched boyy";
   ros::init(argc, argv, "navigation"); // initiation ROS
-  ROS_INFO("ROS initiation succeded");
-
-
-  turtlesim::Pose turtlesim_Pose;
-  ROS_INFO("Created instance for turtlesim Pose");
 
   Nav nav; 
-  ROS_INFO("Created instance for navigation");
 
   Turtle controller; 
-  ROS_INFO("Created instance for navigational controller"); 
 
-  ros::spinOnce(); 
-  /*
-  ROS_INFO("Moving to starting location");
-  controller.movetoGoal(turtlesim_Pose, 1.0, 1.0);
-  ROS_INFO("Initial movement succeded");
-  */
- //
+  // Initial point 
+  controller.turtlesim_Pose.x=1;
+  controller.turtlesim_Pose.y=1;
+  controller.turtlesim_Pose.theta=0;
   while (nav.get_state() != 0)
   {
-    ROS_INFO("LOOOOOP");
-    nav.calc_new_goal();               
-    ROS_INFO("Calculated new goal");
-    ros::Duration(sleep(5));
-    controller.movetoGoal(turtlesim_Pose, nav.get_x(), nav.get_y());
-    ROS_INFO("Moved to goal"); 
-
+    controller.movetoGoal(controller.turtlesim_Pose, nav.get_x(), nav.get_y());
+    ros::spinOnce();
+    nav.calc_new_goal();
   }
   return 0;
 }
