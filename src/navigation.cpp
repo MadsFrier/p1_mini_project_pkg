@@ -40,29 +40,46 @@ void Nav::calc_new_goal(double x, double y) // Void function that updates the cu
     case 1:
     {
       goal_x = startx + area_length;
-      goal_y = current_y;
+      goal_y = nearbyint (current_y) + 0.25;
       state++;
+      ROS_INFO_STREAM("case 1:");
+      ROS_INFO_STREAM(goal_x);
+      ROS_INFO_STREAM(goal_y);
+
+
     }
     break;
     case 2:
     {
       goal_x = startx + area_length;
-      goal_y = current_y + line_width;
+      goal_y = nearbyint (current_y) + line_width + 0.25;
       state++;
+      ROS_INFO_STREAM("case 2:");
+      ROS_INFO_STREAM(goal_x);
+      ROS_INFO_STREAM(goal_y);
+
     }
     break;
     case 3:
     {
       goal_x = startx;
-      goal_y = current_y;
+      goal_y = nearbyint (current_y) - 0.25;
       state++;
+      ROS_INFO_STREAM("case 3:");
+      ROS_INFO_STREAM(goal_x);
+      ROS_INFO_STREAM(goal_y);
+
     }
     break;
     case 4:
     {
       goal_x = startx;
-      goal_y = current_y + line_width;
+      goal_y = nearbyint (current_y) + line_width - 0.25;
       state = 1;
+      ROS_INFO_STREAM("case 4:");
+      ROS_INFO_STREAM(goal_x);
+      ROS_INFO_STREAM(goal_y);
+
     }
     default:
     {
@@ -106,7 +123,7 @@ Turtle::Turtle() // The no arg constructor is set to ask the user for inputs abo
 
 double Turtle::getDistance(double x1, double y1, double x2, double y2) // Function that calculates and returns the euclidian distance between two points.
 {       
-  return sqrt(pow((x2-x1),2)+pow((y2-y1),2));
+  return sqrt(pow((x1-x2),2)+pow((y1-y2),2));
 }
 
 void Turtle::movetoGoal(double goal_x, double goal_y) // Function that calculates the velocity required to move to the goal point, who are taken as input parameters. In other words this is called a proportional controller or simply a P-controller.
