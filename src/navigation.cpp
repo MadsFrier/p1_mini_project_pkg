@@ -71,8 +71,8 @@ void Nav::calc_new_goal(double x, double y) // Void function that updates the cu
     break;
   }
   if (goal_y > area_width){  // If-statement that checks to see if the switch put the goal outside the area
-    goal_x = 0;
-    goal_y = 0;
+    goal_x = startx;
+    goal_y = starty;
     state = 0;
   }
 }
@@ -121,7 +121,14 @@ void Turtle::movetoGoal(double goal_x, double goal_y) // Function that calculate
     // Angular velocities
     vel_msg.angular.x = 0;
     vel_msg.angular.y = 0;
-    vel_msg.angular.z = ang_vel_multi*(atan2(goal_y-tPosey, goal_x-tPosex)-tPosetheta); // Assigns velocity to angular z based on the steering formula 
+    double ang_diff = atan2(goal_y-tPosey, goal_x-tPosex)-tPosetheta; // Function that calculates the angular difference between goal point and turtle position.
+    if (ang_diff > M_PI){                // If statement that checks if the angular difference is greater than pi
+      ang_diff = ang_diff - (2*M_PI);    // If condition is true we then subtract 2 pi from the difference
+    }
+    else if(ang_diff < (-M_PI)){         // If statement that checks if the angular difference is lower than negative pi
+      ang_diff = ang_diff + (2*M_PI);    // If condition is true we then add 2 pi from the difference
+    }
+    vel_msg.angular.z = ang_vel_multi*ang_diff; // Assigns velocity to angular z based on the steering formula 
     
     velocity_publisher.publish(vel_msg); // The ROS pubisher publishes the vel_msg
 
