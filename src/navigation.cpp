@@ -36,50 +36,33 @@ void Nav::calc_new_goal(double x, double y) // Void function that updates the cu
 {
   double current_x = x;      // Current_x stores the x-location of the robot. This is updated each time the calc_new_goal is called.
   double current_y = y;      // Current_y stores the y-location of the robot. This is updated each time the calc_new_goal is called.
-  switch (state){            // Switch function that updates the goal location depending on the state.
+    switch (state){            // Switch function that updates the goal location depending on the state.
     case 1:
     {
       goal_x = startx + area_length;
-      goal_y = nearbyint (current_y) + 0.25;
+      goal_y = current_y;
       state++;
-      ROS_INFO_STREAM("case 1:");
-      ROS_INFO_STREAM(goal_x);
-      ROS_INFO_STREAM(goal_y);
-
-
     }
     break;
     case 2:
     {
       goal_x = startx + area_length;
-      goal_y = nearbyint (current_y) + line_width + 0.25;
+      goal_y = current_y + line_width;
       state++;
-      ROS_INFO_STREAM("case 2:");
-      ROS_INFO_STREAM(goal_x);
-      ROS_INFO_STREAM(goal_y);
-
     }
     break;
     case 3:
     {
       goal_x = startx;
-      goal_y = nearbyint (current_y) - 0.25;
+      goal_y = current_y;
       state++;
-      ROS_INFO_STREAM("case 3:");
-      ROS_INFO_STREAM(goal_x);
-      ROS_INFO_STREAM(goal_y);
-
     }
     break;
     case 4:
     {
       goal_x = startx;
-      goal_y = nearbyint (current_y) + line_width - 0.25;
+      goal_y = current_y + line_width;
       state = 1;
-      ROS_INFO_STREAM("case 4:");
-      ROS_INFO_STREAM(goal_x);
-      ROS_INFO_STREAM(goal_y);
-
     }
     default:
     {
